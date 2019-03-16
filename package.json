@@ -5,5 +5,8 @@
   "main": "server.js",
   "author": "BATTISTELLA Damien <battistella@protonmail.com>",
   "license": "ISC",
-  "git": "https://github.com/Wifsimster/medoc"
+  "git": "https://github.com/Wifsimster/medoc",
+  "dependencies": {
+    "rimraf": "^2.6.3"
+  }
 }

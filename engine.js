@@ -63,6 +63,20 @@ module.exports = class {
     return filteredFiles[0];
   }
 
+  static getOriginPath(episode) {
+    return `${episode.root}\\${episode.directory}\\${episode.file}`;
+  }
+
+  static getDestinationDirectory(episode) {
+    return `\\${episode.name}\\Season ${episode.season}`;
+  }
+
+  static getCleanPath(episode) {
+    return `\\${episode.name}\\Season ${episode.season}\\${episode.name} - ${
+      episode.season
+    }x${episode.episode}${Path.extname(episode.file)}`;
+  }
+
   static search(path) {
     return new Promise((resolve, reject) => {
       var list = [];
@@ -74,9 +88,10 @@ module.exports = class {
         files.map(filename => {
           if (this.isEpisode(filename)) {
             list.push({
+              root: path,
               directory: filename,
               name: this.getName(filename),
-              season: this.getSeason(filename),
+              season: Number(this.getSeason(filename)),
               episode: this.getEpisode(filename),
               file: this.getFile(`${path}\\${filename}`)
             });
