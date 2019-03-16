@@ -1,47 +1,45 @@
-const fs = require("fs");
-const Engine = require("./engine");
-const rimraf = require("rimraf");
+const fs = require("fs")
+const Engine = require("./engine")
 
-const PATH_TO_SCAN = `w:`;
-const PATH_TO_PUSH = `z:`;
+const PATH_TO_SCAN = `w:`
+const PATH_TO_PUSH = `z:`
 
 async function main() {
-  let episodes = await Engine.search(PATH_TO_SCAN);
+  let episodes = await Engine.search(PATH_TO_SCAN)
 
-  fs.readdir(PATH_TO_PUSH, (err, directories) => {
-    directories.map(directory => {
-      episodes.map(episode => {
-        if (directory === episode.name) {
-          let source = Engine.getOriginPath(episode);
-          let destination = `${PATH_TO_PUSH}${Engine.getCleanPath(episode)}`;
-          let destinationDirectory = `${PATH_TO_PUSH}${Engine.getDestinationDirectory(
-            episode
-          )}`;
+  episodes.map(episode => {
+    let sourceDirectory = Engine.getOriginDirectory(episode)
 
-          if (!fs.existsSync(destinationDirectory)) {
-            fs.mkdirSync(destinationDirectory);
-          }
+    if (Engine.hasFile(sourceDirectory)) {
+      let source = Engine.getOriginPath(episode)
 
-          console.log(`Coping ${episode.file}...`);
+      let destinationDirectory = Engine.getDestinationDirectory(
+        PATH_TO_PUSH,
+        episode
+      )
 
-          let reader = fs.createReadStream(source);
+      if (Engine.directoryExist(destinationDirectory)) {
+        let destination = Engine.getDestinationPath(PATH_TO_PUSH, episode)
 
-          reader.on("open", () => {
-            let writer = fs.createWriteStream(destination);
-            reader.pipe(writer);
-          });
+        console.log(`Coping ${episode.file}...`)
 
-          reader.on("close", () => {
-            console.log(`${source} copied !`);
+        let reader = fs.createReadStream(source)
 
-            rimraf(source, () => {
-              console.log(`${source} removed !`);
-            });
-          });
-        }
-      });
-    });
-  });
+        reader.on("open", () => {
+          let writer = fs.createWriteStream(destination)
+          reader.pipe(writer)
+        })
+
+        reader.on("close", () => {
+          console.log(`${episode.file} copied to ${destination}`)
+          Engine.removeDirectory(sourceDirectory)
+        })
+      }
+    } else {
+      console.log(`${sourceDirectory} directory has no video file`)
+      Engine.removeDirectory(sourceDirectory)
+    }
+  })
 }
 
-main();
+main()
