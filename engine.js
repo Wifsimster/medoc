@@ -6,6 +6,45 @@ const rimraf = require("rimraf")
 module.exports = class {
   constructor() {}
 
+  static run(from, to) {
+    this.search(from).then(episodes => {
+      if (episodes.length > 0) {
+        episodes.map(episode => {
+          let sourceDirectory = this.getOriginDirectory(episode)
+
+          if (this.hasFile(sourceDirectory)) {
+            let source = this.getOriginPath(episode)
+
+            let destinationDirectory = this.getDestinationDirectory(to, episode)
+
+            if (this.directoryExist(destinationDirectory)) {
+              let destination = this.getDestinationPath(to, episode)
+
+              console.log(`Coping ${episode.file}...`)
+
+              let reader = fs.createReadStream(source)
+
+              reader.on("open", () => {
+                let writer = fs.createWriteStream(destination)
+                reader.pipe(writer)
+              })
+
+              reader.on("close", () => {
+                console.log(`${episode.file} copied to ${destination}`)
+                Engine.removeDirectory(sourceDirectory)
+              })
+            }
+          } else {
+            console.log(`${sourceDirectory} directory has no video file`)
+            Engine.removeDirectory(sourceDirectory)
+          }
+        })
+      } else {
+        console.warn("No episode found !")
+      }
+    })
+  }
+
   static removeDirectory(path) {
     rimraf(path, () => {
       console.log(`${path} directory removed !`)
