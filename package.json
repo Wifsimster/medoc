@@ -9,5 +9,24 @@
   "dependencies": {
     "mkdirp": "^0.5.1",
     "rimraf": "^2.6.3"
-  }
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wifsimster/medoc.git"
+  },
+  "keywords": [
+    "tv-shows",
+    "tv",
+    "directory",
+    "path",
+    "download"
+  ],
+  "bugs": {
+    "url": "https://github.com/Wifsimster/medoc/issues"
+  },
+  "homepage": "https://github.com/Wifsimster/medoc#readme"
 }
