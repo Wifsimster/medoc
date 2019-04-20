@@ -31,12 +31,12 @@ module.exports = class {
 
               reader.on("close", () => {
                 console.log(`${episode.file} copied to ${destination}`)
-                Engine.removeDirectory(sourceDirectory)
+                this.removeDirectory(sourceDirectory)
               })
             }
           } else {
             console.log(`${sourceDirectory} directory has no video file`)
-            Engine.removeDirectory(sourceDirectory)
+            this.removeDirectory(sourceDirectory)
           }
         })
       } else {
