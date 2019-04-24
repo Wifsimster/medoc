@@ -1,8 +1,8 @@
 {
   "name": "medoc",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A JavaScript library that can simply detect, clean up and transfert tv show episodes from a/ to b/.",
-  "main": "server.js",
+  "main": "medoc.js",
   "author": "BATTISTELLA Damien <battistella@protonmail.com>",
   "license": "MIT",
   "git": "https://github.com/Wifsimster/medoc",

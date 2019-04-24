@@ -1,3 +1,8 @@
+/*
+ * Medoc
+ * Licensed under MIT, https://opensource.org/licenses/MIT/
+ */
+
 const fs = require("fs")
 const Path = require("path")
 const mkdirp = require("mkdirp")

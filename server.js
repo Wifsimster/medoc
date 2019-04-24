@@ -1,6 +1,6 @@
-const Engine = require("./engine")
+const Medoc = require("./medoc")
 
 const PATH_TO_SCAN = `w:`
 const PATH_TO_PUSH = `z:`
 
-Engine.run(PATH_TO_SCAN, PATH_TO_PUSH)
+Medoc.run(PATH_TO_SCAN, PATH_TO_PUSH)
