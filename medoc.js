@@ -17,31 +17,52 @@ module.exports = class {
         episodes.map(episode => {
           let sourceDirectory = this.getOriginDirectory(episode)
 
-          if (this.hasFile(sourceDirectory)) {
-            let source = this.getOriginPath(episode)
+          if (episode.isDirectory) {
+            if (this.hasFile(sourceDirectory)) {
+              let source = this.getOriginPath(episode)
 
-            let destinationDirectory = this.getDestinationDirectory(to, episode)
+              let destinationDirectory = this.getDestinationDirectory(
+                to,
+                episode
+              )
 
-            if (this.directoryExist(destinationDirectory)) {
-              let destination = this.getDestinationPath(to, episode)
+              if (this.directoryExist(destinationDirectory)) {
+                let destination = this.getDestinationPath(to, episode)
 
-              console.log(`Coping ${episode.file}...`)
+                console.log(`Coping ${episode.file}...`)
 
-              let reader = fs.createReadStream(source)
+                let reader = fs.createReadStream(source)
 
-              reader.on("open", () => {
-                let writer = fs.createWriteStream(destination)
-                reader.pipe(writer)
-              })
+                reader.on("open", () => {
+                  let writer = fs.createWriteStream(destination)
+                  reader.pipe(writer)
+                })
 
-              reader.on("close", () => {
-                console.log(`${episode.file} copied to ${destination}`)
-                this.removeDirectory(sourceDirectory)
-              })
+                reader.on("close", () => {
+                  console.log(`${episode.file} copied to ${destination}`)
+                  this.removePath(sourceDirectory)
+                })
+              }
+            } else {
+              console.log(`${sourceDirectory} directory has no video file !`)
+              this.removePath(sourceDirectory)
             }
-          } else {
-            console.log(`${sourceDirectory} directory has no video file`)
-            this.removeDirectory(sourceDirectory)
+          }
+
+          if (episode.isFile) {
+            let destination = this.getDestinationPath(to, episode)
+
+            let reader = fs.createReadStream(episode.file)
+
+            reader.on("open", () => {
+              let writer = fs.createWriteStream(destination)
+              reader.pipe(writer)
+            })
+
+            reader.on("close", () => {
+              console.log(`${episode.file} copied to ${destination}`)
+              this.removePath(episode.file)
+            })
           }
         })
       } else {
@@ -50,9 +71,9 @@ module.exports = class {
     })
   }
 
-  static removeDirectory(path) {
+  static removePath(path) {
     rimraf(path, () => {
-      console.log(`${path} directory removed !`)
+      console.log(`${path} removed !`)
     })
   }
 
@@ -127,14 +148,18 @@ module.exports = class {
   }
 
   static getFile(path) {
-    let files = fs.readdirSync(path)
-    let filteredFiles = files.filter(file => {
-      let format = Path.extname(file).substr(1)
-      if (format === "mp4" || format === "mkv") {
-        return true
-      }
-    })
-    return filteredFiles[0]
+    if (fs.lstatSync(path).isDirectory()) {
+      let files = fs.readdirSync(path)
+      let filteredFiles = files.filter(file => {
+        let format = Path.extname(file).substr(1)
+        if (format === "mp4" || format === "mkv") {
+          return true
+        }
+      })
+      return filteredFiles[0]
+    } else {
+      return path
+    }
   }
 
   static getOriginDirectory(episode) {
@@ -166,6 +191,8 @@ module.exports = class {
         files.map(filename => {
           if (this.isEpisode(filename)) {
             list.push({
+              isDirectory: fs.lstatSync(`${path}\\${filename}`).isDirectory(),
+              isFile: fs.lstatSync(`${path}\\${filename}`).isFile(),
               root: path,
               directory: filename,
               name: this.getName(filename),
