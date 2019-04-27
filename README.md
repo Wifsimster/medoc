@@ -2,6 +2,8 @@
 
 A JavaScript library that can simply detect, clean up and transfert tv show episodes from `a/` to `b/`.
 
+You can add subtitles download with [Yquem](https://github.com/Wifsimster/yquem).
+
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Wifsimster/medoc/blob/master/LICENSE)
 [![npm version](https://badge.fury.io/js/medoc.svg)](https://www.npmjs.com/package/medoc)
 
