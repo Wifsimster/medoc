@@ -7,7 +7,7 @@ A JavaScript library that can simply detect, clean up and transfert tv show epis
 
 **Core Features**
 
-- Detect episode directories from a source directory, episode directories must respect this regex `/([sS]\d{2}[eE]\d{2})/g`;
+- Detect episode directories from a source directory, episode directories must be `{show} - S{season}E{episode}`;
 - Clean up the valid episode directories to this format : `[tv-show]\Season [seasonNumber]\[tv-show] [seasonNumber]x[episodeNumber].[format]`;
 - Move clean up episode directories to a destination directory.
 
