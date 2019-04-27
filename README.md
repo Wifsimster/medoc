@@ -9,7 +9,7 @@ You can add subtitles download with [Yquem](https://github.com/Wifsimster/yquem)
 
 **Core Features**
 
-- Detect episode directories from a source directory, episode directories must be `{show} - S{season}E{episode}/`;
+- Detect episode directories from a source directory, episode directories must be `{show}[ .?]S{season}E{episode}/`;
 - Clean up to : `{show}/Season {season}/{show} {season}x{episode}.{format}`;
 - Move clean up episode directories to a destination directory.
 
