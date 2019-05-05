@@ -57,8 +57,23 @@ module.exports = class {
             let reader = fs.createReadStream(source)
 
             reader.on("open", () => {
-              let writer = fs.createWriteStream(destination)
-              reader.pipe(writer)
+              const destinationPath = this.getDestinationDirectory(
+                this.to,
+                episode
+              )
+              if (!fs.existsSync(destinationPath)) {
+                this.addDirectory(destinationPath)
+                  .then(() => {
+                    let writer = fs.createWriteStream(destination)
+                    reader.pipe(writer)
+                  })
+                  .catch(err => {
+                    reject(err)
+                  })
+              } else {
+                let writer = fs.createWriteStream(destination)
+                reader.pipe(writer)
+              }
             })
 
             reader.on("close", () => {
@@ -87,8 +102,20 @@ module.exports = class {
         let reader = fs.createReadStream(episode.file)
 
         reader.on("open", () => {
-          let writer = fs.createWriteStream(destination)
-          reader.pipe(writer)
+          const destinationPath = this.getDestinationDirectory(this.to, episode)
+          if (!fs.existsSync(destinationPath)) {
+            this.addDirectory(destinationPath)
+              .then(() => {
+                let writer = fs.createWriteStream(destination)
+                reader.pipe(writer)
+              })
+              .catch(err => {
+                reject(err)
+              })
+          } else {
+            let writer = fs.createWriteStream(destination)
+            reader.pipe(writer)
+          }
         })
 
         reader.on("close", () => {
@@ -101,6 +128,17 @@ module.exports = class {
             })
         })
       }
+    })
+  }
+
+  addDirectory(path) {
+    return new Promise((resolve, reject) => {
+      fs.mkdir(path, { recursive: true }, err => {
+        if (err) {
+          reject(err)
+        }
+        resolve(path)
+      })
     })
   }
 
