@@ -3,4 +3,14 @@ const Medoc = require("./medoc")
 const PATH_TO_SCAN = `w:`
 const PATH_TO_PUSH = `z:`
 
-Medoc.run(PATH_TO_SCAN, PATH_TO_PUSH)
+const medoc = new Medoc(PATH_TO_SCAN, PATH_TO_PUSH)
+
+medoc
+  .run()
+  .then(results => {
+    console.log(results)
+    console.log(`All Done :)`)
+  })
+  .catch(err => {
+    console.error(err)
+  })

@@ -9,75 +9,94 @@ const mkdirp = require("mkdirp")
 const rimraf = require("rimraf")
 
 module.exports = class {
-  constructor() {}
+  constructor(from, to) {
+    this.from = from
+    this.to = to
+  }
 
-  static run(from, to) {
-    this.search(from).then(episodes => {
-      if (episodes.length > 0) {
-        episodes.map(episode => {
-          let sourceDirectory = this.getOriginDirectory(episode)
+  run() {
+    return new Promise((resolve, reject) => {
+      let promises = []
+      this.search(this.from).then(episodes => {
+        if (episodes.length > 0) {
+          episodes.map(episode => {
+            promises.push(
+              new Promise((res, rej) => {
+                let sourceDirectory = this.getOriginDirectory(episode)
 
-          if (episode.isDirectory) {
-            if (this.hasFile(sourceDirectory)) {
-              let source = this.getOriginPath(episode)
+                if (episode.isDirectory) {
+                  if (this.hasFile(sourceDirectory)) {
+                    let source = this.getOriginPath(episode)
 
-              let destinationDirectory = this.getDestinationDirectory(
-                to,
-                episode
-              )
+                    let destinationDirectory = this.getDestinationDirectory(
+                      this.to,
+                      episode
+                    )
 
-              if (this.directoryExist(destinationDirectory)) {
-                let destination = this.getDestinationPath(to, episode)
+                    if (this.directoryExist(destinationDirectory)) {
+                      let destination = this.getDestinationPath(
+                        this.to,
+                        episode
+                      )
 
-                console.log(`Coping ${episode.file}...`)
+                      console.log(`Coping ${episode.file}...`)
 
-                let reader = fs.createReadStream(source)
+                      let reader = fs.createReadStream(source)
 
-                reader.on("open", () => {
-                  let writer = fs.createWriteStream(destination)
-                  reader.pipe(writer)
-                })
+                      reader.on("open", () => {
+                        let writer = fs.createWriteStream(destination)
+                        reader.pipe(writer)
+                      })
 
-                reader.on("close", () => {
-                  console.log(`${episode.file} copied to ${destination}`)
-                  this.removePath(sourceDirectory)
-                })
-              }
-            } else {
-              console.log(`${sourceDirectory} directory has no video file !`)
-              this.removePath(sourceDirectory)
-            }
-          }
+                      reader.on("close", () => {
+                        this.removePath(sourceDirectory).then(() => {
+                          resolve(`${episode.file} copied to ${destination}`)
+                        })
+                      })
+                    }
+                  } else {
+                    this.removePath(sourceDirectory).then(() => {
+                      resolve(
+                        `${sourceDirectory} directory has no video file !`
+                      )
+                    })
+                  }
+                }
 
-          if (episode.isFile) {
-            let destination = this.getDestinationPath(to, episode)
+                if (episode.isFile) {
+                  let destination = this.getDestinationPath(this.to, episode)
+                  let reader = fs.createReadStream(episode.file)
 
-            let reader = fs.createReadStream(episode.file)
+                  reader.on("open", () => {
+                    let writer = fs.createWriteStream(destination)
+                    reader.pipe(writer)
+                  })
 
-            reader.on("open", () => {
-              let writer = fs.createWriteStream(destination)
-              reader.pipe(writer)
-            })
-
-            reader.on("close", () => {
-              console.log(`${episode.file} copied to ${destination}`)
-              this.removePath(episode.file)
-            })
-          }
-        })
-      } else {
-        console.warn("No episode found !")
-      }
+                  reader.on("close", () => {
+                    this.removePath(episode.file).then(() => {
+                      resolve(`${episode.file} copied to ${destination}`)
+                    })
+                  })
+                }
+              })
+            )
+          })
+        } else {
+          reject("No episode found !")
+        }
+      })
     })
   }
 
-  static removePath(path) {
-    rimraf(path, () => {
-      console.log(`${path} removed !`)
+  removePath(path) {
+    return new Promise((resolve, reject) => {
+      rimraf(path, () => {
+        resolve(`${path} removed !`)
+      })
     })
   }
 
-  static directoryExist(path) {
+  directoryExist(path) {
     if (!fs.existsSync(path)) {
       mkdirp.sync(path)
       return true
@@ -85,14 +104,14 @@ module.exports = class {
     return true
   }
 
-  static isEpisode(filename) {
+  isEpisode(filename) {
     if (/([sS]\d{2}[eE]\d{2})/g.exec(filename)) {
       return true
     }
     return false
   }
 
-  static hasFile(path) {
+  hasFile(path) {
     let files = fs.readdirSync(path)
     let filteredFiles = files.filter(file => {
       let format = Path.extname(file).substr(1)
@@ -106,7 +125,7 @@ module.exports = class {
     return false
   }
 
-  static getYear(filename) {
+  getYear(filename) {
     let rst = /(\d{4})/.exec(filename)
     if (rst) {
       return rst[0]
@@ -114,7 +133,7 @@ module.exports = class {
     return null
   }
 
-  static getName(filename) {
+  getName(filename) {
     let rst = /([sS]\d{2}[eE]\d{2})/g.exec(filename)
 
     if (rst) {
@@ -131,7 +150,7 @@ module.exports = class {
     return null
   }
 
-  static getSeason(filename) {
+  getSeason(filename) {
     let rst = /[sS](\d{2})[eE]\d{2}/g.exec(filename)
 
     if (rst) {
@@ -139,7 +158,7 @@ module.exports = class {
     }
   }
 
-  static getEpisode(filename) {
+  getEpisode(filename) {
     let rst = /[sS]\d{2}[eE](\d{2})/g.exec(filename)
 
     if (rst) {
@@ -147,7 +166,7 @@ module.exports = class {
     }
   }
 
-  static getFile(path) {
+  getFile(path) {
     if (fs.lstatSync(path).isDirectory()) {
       let files = fs.readdirSync(path)
       let filteredFiles = files.filter(file => {
@@ -162,25 +181,25 @@ module.exports = class {
     }
   }
 
-  static getOriginDirectory(episode) {
+  getOriginDirectory(episode) {
     return `${episode.root}\\${episode.directory}`
   }
 
-  static getOriginPath(episode) {
+  getOriginPath(episode) {
     return `${episode.root}\\${episode.directory}\\${episode.file}`
   }
 
-  static getDestinationDirectory(root, episode) {
+  getDestinationDirectory(root, episode) {
     return `${root}\\${episode.name}\\Season ${episode.season}`
   }
 
-  static getDestinationPath(root, episode) {
+  getDestinationPath(root, episode) {
     return `${root}\\${episode.name}\\Season ${episode.season}\\${
       episode.name
     } - ${episode.season}x${episode.episode}${Path.extname(episode.file)}`
   }
 
-  static search(path) {
+  search(path) {
     return new Promise((resolve, reject) => {
       var list = []
       fs.readdir(path, (err, files) => {
