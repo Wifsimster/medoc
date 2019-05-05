@@ -85,6 +85,14 @@ module.exports = class {
           reject("No episode found !")
         }
       })
+
+      Promise.all(promises)
+        .then(results => {
+          resolve(results)
+        })
+        .catch(err => {
+          reject(err)
+        })
     })
   }
 
