@@ -16,83 +16,91 @@ module.exports = class {
 
   run() {
     return new Promise((resolve, reject) => {
-      let promises = []
       this.search(this.from).then(episodes => {
         if (episodes.length > 0) {
-          episodes.map(episode => {
-            promises.push(
-              new Promise((res, rej) => {
-                let sourceDirectory = this.getOriginDirectory(episode)
-
-                if (episode.isDirectory) {
-                  if (this.hasFile(sourceDirectory)) {
-                    let source = this.getOriginPath(episode)
-
-                    let destinationDirectory = this.getDestinationDirectory(
-                      this.to,
-                      episode
-                    )
-
-                    if (this.directoryExist(destinationDirectory)) {
-                      let destination = this.getDestinationPath(
-                        this.to,
-                        episode
-                      )
-
-                      console.log(`Coping ${episode.file}...`)
-
-                      let reader = fs.createReadStream(source)
-
-                      reader.on("open", () => {
-                        let writer = fs.createWriteStream(destination)
-                        reader.pipe(writer)
-                      })
-
-                      reader.on("close", () => {
-                        this.removePath(sourceDirectory).then(() => {
-                          resolve(`${episode.file} copied to ${destination}`)
-                        })
-                      })
-                    }
-                  } else {
-                    this.removePath(sourceDirectory).then(() => {
-                      resolve(
-                        `${sourceDirectory} directory has no video file !`
-                      )
-                    })
-                  }
-                }
-
-                if (episode.isFile) {
-                  let destination = this.getDestinationPath(this.to, episode)
-                  let reader = fs.createReadStream(episode.file)
-
-                  reader.on("open", () => {
-                    let writer = fs.createWriteStream(destination)
-                    reader.pipe(writer)
-                  })
-
-                  reader.on("close", () => {
-                    this.removePath(episode.file).then(() => {
-                      resolve(`${episode.file} copied to ${destination}`)
-                    })
-                  })
-                }
-              })
-            )
+          let promises = episodes.map(episode => {
+            return this.move(episode)
           })
+
+          Promise.all(promises)
+            .then(results => {
+              resolve(results)
+            })
+            .catch(err => {
+              reject(err)
+            })
         } else {
           reject("No episode found !")
         }
       })
+    })
+  }
 
-      Promise.all(promises)
-        .then(results => {
-          resolve(results)
+  move(episode) {
+    return new Promise((resolve, reject) => {
+      let sourceDirectory = this.getOriginDirectory(episode)
+
+      if (episode.isDirectory) {
+        if (this.hasFile(sourceDirectory)) {
+          let source = this.getOriginPath(episode)
+
+          let destinationDirectory = this.getDestinationDirectory(
+            this.to,
+            episode
+          )
+
+          if (this.directoryExist(destinationDirectory)) {
+            let destination = this.getDestinationPath(this.to, episode)
+
+            console.log(`Coping ${episode.file}...`)
+
+            let reader = fs.createReadStream(source)
+
+            reader.on("open", () => {
+              let writer = fs.createWriteStream(destination)
+              reader.pipe(writer)
+            })
+
+            reader.on("close", () => {
+              this.removePath(sourceDirectory)
+                .then(() => {
+                  resolve(`${episode.file} copied to ${destination}`)
+                })
+                .catch(err => {
+                  reject(err)
+                })
+            })
+          }
+        } else {
+          this.removePath(sourceDirectory)
+            .then(() => {
+              resolve(`${sourceDirectory} directory has no video file !`)
+            })
+            .catch(err => {
+              reject(err)
+            })
+        }
+      }
+
+      if (episode.isFile) {
+        let destination = this.getDestinationPath(this.to, episode)
+        let reader = fs.createReadStream(episode.file)
+
+        reader.on("open", () => {
+          let writer = fs.createWriteStream(destination)
+          reader.pipe(writer)
         })
-        .catch(err => {
-          reject(err)
+
+        reader.on("close", () => {
+          this.removePath(episode.file)
+            .then(() => {
+              resolve(`${episode.file} copied to ${destination}`)
+            })
+            .catch(err => {
+              reject(err)
+            })
         })
+      }
     })
   }
 
