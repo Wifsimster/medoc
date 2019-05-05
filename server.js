@@ -9,7 +9,6 @@ medoc
   .run()
   .then(results => {
     console.log(results)
-    console.log(`All Done :)`)
   })
   .catch(err => {
     console.error(err)

@@ -11,7 +11,8 @@
     "rimraf": "^2.6.3"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "patch": "npm version patch && npm publish"
   },
   "devDependencies": {},
   "repository": {
