@@ -260,21 +260,22 @@ module.exports = class {
         if (err) {
           reject(err)
         }
-
-        files.map(filename => {
-          if (this.isEpisode(filename)) {
-            list.push({
-              isDirectory: fs.lstatSync(`${path}\\${filename}`).isDirectory(),
-              isFile: fs.lstatSync(`${path}\\${filename}`).isFile(),
-              root: path,
-              directory: filename,
-              name: this.getName(filename),
-              season: Number(this.getSeason(filename)),
-              episode: this.getEpisode(filename),
-              file: this.getFile(`${path}\\${filename}`)
-            })
-          }
-        })
+        if (files && files.length > 0) {
+          files.map(filename => {
+            if (this.isEpisode(filename)) {
+              list.push({
+                isDirectory: fs.lstatSync(`${path}\\${filename}`).isDirectory(),
+                isFile: fs.lstatSync(`${path}\\${filename}`).isFile(),
+                root: path,
+                directory: filename,
+                name: this.getName(filename),
+                season: Number(this.getSeason(filename)),
+                episode: this.getEpisode(filename),
+                file: this.getFile(`${path}\\${filename}`)
+              })
+            }
+          })
+        }
         resolve(list)
       })
     })
