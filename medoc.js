@@ -44,10 +44,7 @@ module.exports = class {
         if (this.hasFile(sourceDirectory)) {
           let source = this.getOriginPath(episode)
 
-          let destinationDirectory = this.getDestinationDirectory(
-            this.to,
-            episode
-          )
+          let destinationDirectory = this.getDestinationDirectory(this.to, episode)
 
           if (this.directoryExist(destinationDirectory)) {
             let destination = this.getDestinationPath(this.to, episode)
@@ -57,10 +54,7 @@ module.exports = class {
             let reader = fs.createReadStream(source)
 
             reader.on("open", () => {
-              const destinationPath = this.getDestinationDirectory(
-                this.to,
-                episode
-              )
+              const destinationPath = this.getDestinationDirectory(this.to, episode)
               if (!fs.existsSync(destinationPath)) {
                 this.addDirectory(destinationPath)
                   .then(() => {
@@ -181,7 +175,7 @@ module.exports = class {
 
   getYear(filename) {
     let rst = /(\d{4})/.exec(filename)
-    if (rst) {
+    if (rst && rst[0] !== "1080") {
       return rst[0]
     }
     return null
@@ -248,9 +242,9 @@ module.exports = class {
   }
 
   getDestinationPath(root, episode) {
-    return `${root}\\${episode.name}\\Season ${episode.season}\\${
-      episode.name
-    } - ${episode.season}x${episode.episode}${Path.extname(episode.file)}`
+    return `${root}\\${episode.name}\\Season ${episode.season}\\${episode.name} - ${episode.season}x${
+      episode.episode
+    }${Path.extname(episode.file)}`
   }
 
   search(path) {
