@@ -188,11 +188,21 @@ module.exports = class {
       let tmp = filename.substr(0, rst.index)
       tmp = tmp.replace(/\./g, " ").trim()
 
+      // Extract year from name
       let year = this.getYear(filename)
       if (year) {
         tmp = tmp.replace(year, "")
         tmp += `(${year})`
       }
+
+      // Extract sub team from name
+      let subname = /([[\s\S]*])[\s\S]*/g.exec(tmp)
+      if (subname) {
+        tmp = tmp.substr(subname[1].length, tmp.length)
+      }
+
+      tmp = tmp.trim()
+
       return tmp
     }
     return null
