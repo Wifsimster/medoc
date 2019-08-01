@@ -163,7 +163,7 @@ module.exports = class {
     let files = fs.readdirSync(path)
     let filteredFiles = files.filter(file => {
       let format = Path.extname(file).substr(1)
-      if (format === "mp4" || format === "mkv") {
+      if (format === "mp4" || format === "mkv" || format === "avi") {
         return true
       }
     })
@@ -219,7 +219,7 @@ module.exports = class {
       let files = fs.readdirSync(path)
       let filteredFiles = files.filter(file => {
         let format = Path.extname(file).substr(1)
-        if (format === "mp4" || format === "mkv") {
+        if (format === "mp4" || format === "mkv" || format === "avi") {
           return true
         }
       })
