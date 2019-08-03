@@ -257,29 +257,31 @@ module.exports = class {
     }${path.extname(episode.file)}`
   }
 
-  search(url) {
+  search() {
     return new Promise((resolve, reject) => {
       var list = []
-      fs.readdir(url, (err, files) => {
+      fs.readdir(this.from, (err, files) => {
         if (err) {
           reject(err)
         }
         if (files && files.length > 0) {
           files.map(filename => {
             if (this.isEpisode(filename)) {
+              let filePath = `${this.from}\\${filename}`
               let showName = this.getShowName(filename)
               let season = Number(this.getEpisodeSeason(filename))
               let number = Number(this.getEpisodeNumber(filename))
-              let format = path.extname(episode.file)
+              let format = path.extname(this.getFile(filePath))
 
               list.push({
                 origin: {
                   directory: filename,
-                  file: this.getFile(`${url}\\${filename}`),
+                  file: this.getFile(filePath),
                   format: format,
-                  isDirectory: fs.lstatSync(`${url}\\${filename}`).isDirectory(),
-                  isFile: fs.lstatSync(`${url}\\${filename}`).isFile(),
-                  root: url
+                  isDirectory: fs.lstatSync(filePath).isDirectory(),
+                  isFile: fs.lstatSync(filePath).isFile(),
+                  path: path.resolve(`${filePath}\\${this.getFile(filePath)}`),
+                  root: this.from
                 },
                 episode: {
                   show: showName,
@@ -287,8 +289,11 @@ module.exports = class {
                   number: number
                 },
                 destination: {
-                  directory: path.resolve(`${url}\\${showName}\\Season ${season}`),
-                  filename: `${showName} - ${season}x${number}${format}`
+                  directory: path.resolve(`${this.from}\\${showName}\\Season ${season}`),
+                  filename: `${showName} - ${season}x${number}${format}`,
+                  path: path.resolve(
+                    `${this.from}\\${showName}\\Season ${season}\\${showName} - ${season}x${number}${format}`
+                  )
                 }
               })
             }
