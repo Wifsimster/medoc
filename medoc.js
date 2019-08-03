@@ -289,11 +289,12 @@ module.exports = class {
                   number: number
                 },
                 destination: {
-                  directory: path.resolve(`${this.to}\\${showName}\\Season ${season}`),
+                  directory: path.resolve(`${showName}\\Season ${season}`),
                   filename: `${showName} - ${season}x${number}${format}`,
                   path: path.resolve(
                     `${this.to}\\${showName}\\Season ${season}\\${showName} - ${season}x${number}${format}`
-                  )
+                  ),
+                  root: this.to
                 }
               })
             }
