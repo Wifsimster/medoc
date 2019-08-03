@@ -1,6 +1,6 @@
 {
   "name": "medoc",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A JavaScript library that can simply detect, clean up and transfert tv show episodes from a/ to b/.",
   "main": "medoc.js",
   "author": "BATTISTELLA Damien <battistella@protonmail.com>",
