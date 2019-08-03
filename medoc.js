@@ -280,7 +280,7 @@ module.exports = class {
                   format: format,
                   isDirectory: fs.lstatSync(filePath).isDirectory(),
                   isFile: fs.lstatSync(filePath).isFile(),
-                  path: path.resolve(`${filePath}\\${this.getFile(filePath)}`),
+                  path: path.normalize(`${filePath}\\${this.getFile(filePath)}`),
                   root: this.from
                 },
                 episode: {
@@ -289,9 +289,9 @@ module.exports = class {
                   number: number
                 },
                 destination: {
-                  directory: path.resolve(`${showName}\\Season ${season}`),
+                  directory: path.normalize(`${showName}\\Season ${season}`),
                   filename: `${showName} - ${season}x${number}${format}`,
-                  path: path.resolve(
+                  path: path.normalize(
                     `${this.to}\\${showName}\\Season ${season}\\${showName} - ${season}x${number}${format}`
                   ),
                   root: this.to
