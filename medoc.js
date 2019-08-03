@@ -4,7 +4,7 @@
  */
 
 const fs = require("fs")
-const Path = require("path")
+const path = require("path")
 const mkdirp = require("mkdirp")
 const rimraf = require("rimraf")
 
@@ -54,9 +54,9 @@ module.exports = class {
             let reader = fs.createReadStream(source)
 
             reader.on("open", () => {
-              const destinationPath = this.getDestinationDirectory(this.to, episode)
-              if (!fs.existsSync(destinationPath)) {
-                this.addDirectory(destinationPath)
+              const destinationpath = this.getDestinationDirectory(this.to, episode)
+              if (!fs.existsSync(destinationpath)) {
+                this.addDirectory(destinationpath)
                   .then(() => {
                     let writer = fs.createWriteStream(destination)
                     reader.pipe(writer)
@@ -71,7 +71,7 @@ module.exports = class {
             })
 
             reader.on("close", () => {
-              this.removePath(sourceDirectory)
+              this.removepath(sourceDirectory)
                 .then(() => {
                   resolve(`${episode.file} copied to ${destination}`)
                 })
@@ -81,7 +81,7 @@ module.exports = class {
             })
           }
         } else {
-          this.removePath(sourceDirectory)
+          this.removepath(sourceDirectory)
             .then(() => {
               resolve(`${sourceDirectory} directory has no video file !`)
             })
@@ -96,9 +96,9 @@ module.exports = class {
         let reader = fs.createReadStream(episode.file)
 
         reader.on("open", () => {
-          const destinationPath = this.getDestinationDirectory(this.to, episode)
-          if (!fs.existsSync(destinationPath)) {
-            this.addDirectory(destinationPath)
+          const destinationpath = this.getDestinationDirectory(this.to, episode)
+          if (!fs.existsSync(destinationpath)) {
+            this.addDirectory(destinationpath)
               .then(() => {
                 let writer = fs.createWriteStream(destination)
                 reader.pipe(writer)
@@ -113,7 +113,7 @@ module.exports = class {
         })
 
         reader.on("close", () => {
-          this.removePath(episode.file)
+          this.removepath(episode.file)
             .then(() => {
               resolve(`${episode.file} copied to ${destination}`)
             })
@@ -125,28 +125,28 @@ module.exports = class {
     })
   }
 
-  addDirectory(path) {
+  addDirectory(url) {
     return new Promise((resolve, reject) => {
-      fs.mkdir(path, { recursive: true }, err => {
+      fs.mkdir(url, { recursive: true }, err => {
         if (err) {
           reject(err)
         }
-        resolve(path)
+        resolve(url)
       })
     })
   }
 
-  removePath(path) {
+  removepath(url) {
     return new Promise((resolve, reject) => {
-      rimraf(path, () => {
-        resolve(`${path} removed !`)
+      rimraf(url, () => {
+        resolve(`${url} removed !`)
       })
     })
   }
 
-  directoryExist(path) {
-    if (!fs.existsSync(path)) {
-      mkdirp.sync(path)
+  directoryExist(url) {
+    if (!fs.existsSync(url)) {
+      mkdirp.sync(url)
       return true
     }
     return true
@@ -159,10 +159,10 @@ module.exports = class {
     return false
   }
 
-  hasFile(path) {
-    let files = fs.readdirSync(path)
+  hasFile(url) {
+    let files = fs.readdirSync(url)
     let filteredFiles = files.filter(file => {
-      let format = Path.extname(file).substr(1)
+      let format = path.extname(file).substr(1)
       if (format === "mp4" || format === "mkv" || format === "avi") {
         return true
       }
@@ -181,7 +181,7 @@ module.exports = class {
     return null
   }
 
-  getName(filename) {
+  getShowName(filename) {
     let rst = /([sS]\d{2}[eE]\d{2})/g.exec(filename)
 
     if (rst) {
@@ -208,7 +208,7 @@ module.exports = class {
     return null
   }
 
-  getSeason(filename) {
+  getEpisodeSeason(filename) {
     let rst = /[sS](\d{2})[eE]\d{2}/g.exec(filename)
 
     if (rst) {
@@ -216,7 +216,7 @@ module.exports = class {
     }
   }
 
-  getEpisode(filename) {
+  getEpisodeNumber(filename) {
     let rst = /[sS]\d{2}[eE](\d{2})/g.exec(filename)
 
     if (rst) {
@@ -224,18 +224,18 @@ module.exports = class {
     }
   }
 
-  getFile(path) {
-    if (fs.lstatSync(path).isDirectory()) {
-      let files = fs.readdirSync(path)
+  getFile(url) {
+    if (fs.lstatSync(url).isDirectory()) {
+      let files = fs.readdirSync(url)
       let filteredFiles = files.filter(file => {
-        let format = Path.extname(file).substr(1)
+        let format = path.extname(file).substr(1)
         if (format === "mp4" || format === "mkv" || format === "avi") {
           return true
         }
       })
       return filteredFiles[0]
     } else {
-      return path
+      return url
     }
   }
 
@@ -254,28 +254,42 @@ module.exports = class {
   getDestinationPath(root, episode) {
     return `${root}\\${episode.name}\\Season ${episode.season}\\${episode.name} - ${episode.season}x${
       episode.episode
-    }${Path.extname(episode.file)}`
+    }${path.extname(episode.file)}`
   }
 
-  search(path) {
+  search(url) {
     return new Promise((resolve, reject) => {
       var list = []
-      fs.readdir(path, (err, files) => {
+      fs.readdir(url, (err, files) => {
         if (err) {
           reject(err)
         }
         if (files && files.length > 0) {
           files.map(filename => {
             if (this.isEpisode(filename)) {
+              let showName = this.getShowName(filename)
+              let season = Number(this.getEpisodeSeason(filename))
+              let number = Number(this.getEpisodeNumber(filename))
+              let format = path.extname(episode.file)
+
               list.push({
-                isDirectory: fs.lstatSync(`${path}\\${filename}`).isDirectory(),
-                isFile: fs.lstatSync(`${path}\\${filename}`).isFile(),
-                root: path,
-                directory: filename,
-                name: this.getName(filename),
-                season: Number(this.getSeason(filename)),
-                episode: this.getEpisode(filename),
-                file: this.getFile(`${path}\\${filename}`)
+                origin: {
+                  directory: filename,
+                  file: this.getFile(`${url}\\${filename}`),
+                  format: format,
+                  isDirectory: fs.lstatSync(`${url}\\${filename}`).isDirectory(),
+                  isFile: fs.lstatSync(`${url}\\${filename}`).isFile(),
+                  root: url
+                },
+                episode: {
+                  show: showName,
+                  season: season,
+                  number: number
+                },
+                destination: {
+                  directory: path.resolve(`${url}\\${showName}\\Season ${season}`),
+                  filename: `${showName} - ${season}x${number}${format}`
+                }
               })
             }
           })
