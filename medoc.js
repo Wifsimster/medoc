@@ -16,10 +16,10 @@ module.exports = class {
 
   run() {
     return new Promise((resolve, reject) => {
-      this.search(this.from).then(episodes => {
+      this.search().then(episodes => {
         if (episodes.length > 0) {
-          let promises = episodes.map(episode => {
-            return this.move(episode)
+          let promises = episodes.map(async episode => {
+            return await this.move(episode)
           })
 
           Promise.all(promises)
@@ -36,50 +36,38 @@ module.exports = class {
     })
   }
 
-  move(episode) {
+  async move(episode) {
     return new Promise((resolve, reject) => {
-      let sourceDirectory = this.getOriginDirectory(episode)
+      const sourcePath = episode.origin.path
+      const destinationPath = episode.destination.path
+      const destinationDirectory = this.getDestinationDirectory(episode)
 
-      if (episode.isDirectory) {
+      if (episode.origin.isDirectory) {
+        const sourceDirectory = this.getOriginDirectory(episode)
+
         if (this.hasFile(sourceDirectory)) {
-          let source = this.getOriginPath(episode)
-
-          let destinationDirectory = this.getDestinationDirectory(this.to, episode)
-
-          if (this.directoryExist(destinationDirectory)) {
-            let destination = this.getDestinationPath(this.to, episode)
-
-            console.log(`Coping ${episode.file}...`)
-
-            let reader = fs.createReadStream(source)
-
-            reader.on("open", () => {
-              const destinationpath = this.getDestinationDirectory(this.to, episode)
-              if (!fs.existsSync(destinationpath)) {
-                this.addDirectory(destinationpath)
-                  .then(() => {
-                    let writer = fs.createWriteStream(destination)
-                    reader.pipe(writer)
-                  })
-                  .catch(err => {
-                    reject(err)
-                  })
-              } else {
-                let writer = fs.createWriteStream(destination)
-                reader.pipe(writer)
-              }
-            })
-
-            reader.on("close", () => {
-              this.removepath(sourceDirectory)
-                .then(() => {
-                  resolve(`${episode.file} copied to ${destination}`)
-                })
-                .catch(err => {
-                  reject(err)
-                })
-            })
+          if (!fs.existsSync(destinationDirectory)) {
+            this.createDirectory(destinationDirectory)
           }
+
+          let reader = fs.createReadStream(sourcePath)
+
+          reader.on("open", () => {
+            console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
+
+            let writer = fs.createWriteStream(destinationPath)
+            reader.pipe(writer)
+          })
+
+          reader.on("close", () => {
+            this.removepath(sourceDirectory)
+              .then(() => {
+                resolve(`${episode.origin.file} copied to ${destinationPath}`)
+              })
+              .catch(err => {
+                reject(err)
+              })
+          })
         } else {
           this.removepath(sourceDirectory)
             .then(() => {
@@ -91,31 +79,24 @@ module.exports = class {
         }
       }
 
-      if (episode.isFile) {
-        let destination = this.getDestinationPath(this.to, episode)
-        let reader = fs.createReadStream(episode.file)
+      if (episode.origin.isFile) {
+        if (!fs.existsSync(destinationDirectory)) {
+          this.createDirectory(destinationDirectory)
+        }
+
+        let reader = fs.createReadStream(sourcePath)
 
         reader.on("open", () => {
-          const destinationpath = this.getDestinationDirectory(this.to, episode)
-          if (!fs.existsSync(destinationpath)) {
-            this.addDirectory(destinationpath)
-              .then(() => {
-                let writer = fs.createWriteStream(destination)
-                reader.pipe(writer)
-              })
-              .catch(err => {
-                reject(err)
-              })
-          } else {
-            let writer = fs.createWriteStream(destination)
-            reader.pipe(writer)
-          }
+          console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
+
+          let writer = fs.createWriteStream(destinationPath)
+          reader.pipe(writer)
         })
 
         reader.on("close", () => {
-          this.removepath(episode.file)
+          this.removepath(episode.origin.file)
             .then(() => {
-              resolve(`${episode.file} copied to ${destination}`)
+              resolve(`${episode.origin.file} copied to ${destinationPath}`)
             })
             .catch(err => {
               reject(err)
@@ -144,7 +125,8 @@ module.exports = class {
     })
   }
 
-  directoryExist(url) {
+  // Create directory and subdirectories if necessary
+  createDirectory(url) {
     if (!fs.existsSync(url)) {
       mkdirp.sync(url)
       return true
@@ -240,21 +222,15 @@ module.exports = class {
   }
 
   getOriginDirectory(episode) {
-    return `${episode.root}\\${episode.directory}`
+    return `${episode.origin.root}\\${episode.origin.directory}`
   }
 
   getOriginPath(episode) {
-    return `${episode.root}\\${episode.directory}\\${episode.file}`
+    return `${episode.origin.root}\\${episode.origin.directory}\\${episode.origin.file}`
   }
 
-  getDestinationDirectory(root, episode) {
-    return `${root}\\${episode.name}\\Season ${episode.season}`
-  }
-
-  getDestinationPath(root, episode) {
-    return `${root}\\${episode.name}\\Season ${episode.season}\\${episode.name} - ${episode.season}x${
-      episode.episode
-    }${path.extname(episode.file)}`
+  getDestinationDirectory(episode) {
+    return `${episode.destination.root}\\${episode.destination.directory}`
   }
 
   search() {
@@ -268,19 +244,23 @@ module.exports = class {
           files.map(filename => {
             if (this.isEpisode(filename)) {
               let filePath = `${this.from}\\${filename}`
+              let isDirectory = fs.lstatSync(filePath).isDirectory()
+              let isFile = fs.lstatSync(filePath).isFile()
               let showName = this.getShowName(filename)
               let season = Number(this.getEpisodeSeason(filename))
               let number = Number(this.getEpisodeNumber(filename))
-              let format = path.extname(this.getFile(filePath))
+              let format = isDirectory ? path.extname(this.getFile(filePath)) : path.extname(filename)
 
               list.push({
                 origin: {
-                  directory: filename,
+                  directory: fs.lstatSync(filePath).isDirectory() ? filename : null,
                   file: this.getFile(filePath),
                   format: format,
-                  isDirectory: fs.lstatSync(filePath).isDirectory(),
-                  isFile: fs.lstatSync(filePath).isFile(),
-                  path: path.normalize(`${filePath}\\${this.getFile(filePath)}`),
+                  isDirectory: isDirectory,
+                  isFile: isFile,
+                  path: fs.lstatSync(filePath).isDirectory()
+                    ? path.normalize(`${filePath}\\${this.getFile(filePath)}`)
+                    : filePath,
                   root: this.from
                 },
                 episode: {
@@ -290,9 +270,11 @@ module.exports = class {
                 },
                 destination: {
                   directory: path.normalize(`${showName}\\Season ${season}`),
-                  filename: `${showName} - ${season}x${number}${format}`,
+                  filename: `${showName} - ${season}x${number < 10 ? "0" + number : number}${format}`,
                   path: path.normalize(
-                    `${this.to}\\${showName}\\Season ${season}\\${showName} - ${season}x${number}${format}`
+                    `${this.to}\\${showName}\\Season ${season}\\${showName} - ${season}x${
+                      number < 10 ? "0" + number : number
+                    }${format}`
                   ),
                   root: this.to
                 }
