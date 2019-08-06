@@ -3,121 +3,81 @@
  * Licensed under MIT, https://opensource.org/licenses/MIT/
  */
 
-const fs = require("fs")
-const path = require("path")
-const mkdirp = require("mkdirp")
-const rimraf = require("rimraf")
+const fs = require('fs')
+const path = require('path')
+const mkdirp = require('mkdirp')
+const rimraf = require('rimraf')
 
-module.exports = class {
+const VIDEO_FORMATS = ['.avi', '.mkv', '.mp4', '.webm', '.flv', '.vob', '.ogg', '.amv']
+
+module.exports = class Medoc {
   constructor(from, to) {
     this.from = from
     this.to = to
   }
 
-  run() {
-    return new Promise((resolve, reject) => {
-      this.search().then(episodes => {
-        if (episodes.length > 0) {
-          let promises = episodes.map(async episode => {
-            return await this.move(episode)
-          })
+  async run() {
+    const episodes = await Medoc.search(this.from, this.to)
 
-          Promise.all(promises)
-            .then(results => {
-              resolve(results)
-            })
-            .catch(err => {
-              reject(err)
-            })
-        } else {
-          reject("No episode found !")
-        }
+    return await Promise.all(
+      episodes.map(async episode => {
+        return await Yquem.move(episode)
       })
-    })
+    )
   }
 
-  async move(episode) {
-    return new Promise((resolve, reject) => {
-      const sourcePath = episode.origin.path
-      const destinationPath = episode.destination.path
-      const destinationDirectory = this.getDestinationDirectory(episode)
+  static async move(episode) {
+    const sourcePath = episode.origin.path
+    const destinationPath = episode.destination.path
+    const destinationDirectory = Medoc.getDestinationDirectory(episode)
 
-      if (episode.origin.isDirectory) {
-        const sourceDirectory = this.getOriginDirectory(episode)
+    if (episode.origin.isDirectory) {
+      const sourceDirectory = Medoc.getOriginDirectory(episode)
 
-        if (this.hasFile(sourceDirectory)) {
-          if (!fs.existsSync(destinationDirectory)) {
-            this.createDirectory(destinationDirectory)
-          }
-
-          let reader = fs.createReadStream(sourcePath)
-
-          reader.on("open", () => {
-            console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
-
-            let writer = fs.createWriteStream(destinationPath)
-            reader.pipe(writer)
-          })
-
-          reader.on("close", () => {
-            this.removepath(sourceDirectory)
-              .then(() => {
-                resolve(`${episode.origin.file} copied to ${destinationPath}`)
-              })
-              .catch(err => {
-                reject(err)
-              })
-          })
-        } else {
-          this.removepath(sourceDirectory)
-            .then(() => {
-              resolve(`${sourceDirectory} directory has no video file !`)
-            })
-            .catch(err => {
-              reject(err)
-            })
-        }
-      }
-
-      if (episode.origin.isFile) {
+      if (Medoc.hasFile(sourceDirectory)) {
         if (!fs.existsSync(destinationDirectory)) {
-          this.createDirectory(destinationDirectory)
+          Medoc.createDirectory(destinationDirectory)
         }
 
         let reader = fs.createReadStream(sourcePath)
 
-        reader.on("open", () => {
+        reader.on('open', () => {
           console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
-
           let writer = fs.createWriteStream(destinationPath)
           reader.pipe(writer)
         })
 
-        reader.on("close", () => {
-          this.removepath(episode.origin.file)
-            .then(() => {
-              resolve(`${episode.origin.file} copied to ${destinationPath}`)
-            })
-            .catch(err => {
-              reject(err)
-            })
+        reader.on('close', async () => {
+          await Medoc.removePath(sourceDirectory)
+          console.log(`${episode.origin.file} copied to ${destinationPath}`)
         })
+      } else {
+        await Medoc.removePath(sourceDirectory)
+        console.log(`${sourceDirectory} directory has no video file !`)
       }
-    })
-  }
+    }
 
-  addDirectory(url) {
-    return new Promise((resolve, reject) => {
-      fs.mkdir(url, { recursive: true }, err => {
-        if (err) {
-          reject(err)
-        }
-        resolve(url)
+    if (episode.origin.isFile) {
+      if (!fs.existsSync(destinationDirectory)) {
+        Medoc.createDirectory(destinationDirectory)
+      }
+
+      let reader = fs.createReadStream(sourcePath)
+
+      reader.on('open', () => {
+        // console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
+        let writer = fs.createWriteStream(destinationPath)
+        reader.pipe(writer)
       })
-    })
+
+      reader.on('close', async () => {
+        await Medoc.removePath(episode.origin.file)
+        console.log(`${episode.origin.file} copied to ${destinationPath}`)
+      })
+    }
   }
 
-  removepath(url) {
+  static removePath(url) {
     return new Promise((resolve, reject) => {
       rimraf(url, () => {
         resolve(`${url} removed !`)
@@ -126,7 +86,7 @@ module.exports = class {
   }
 
   // Create directory and subdirectories if necessary
-  createDirectory(url) {
+  static createDirectory(url) {
     if (!fs.existsSync(url)) {
       mkdirp.sync(url)
       return true
@@ -134,18 +94,17 @@ module.exports = class {
     return true
   }
 
-  isEpisode(filename) {
+  static isEpisode(filename) {
     if (/([sS]\d{2}[eE]\d{2})/g.exec(filename)) {
       return true
     }
     return false
   }
 
-  hasFile(url) {
+  static hasFile(url) {
     let files = fs.readdirSync(url)
     let filteredFiles = files.filter(file => {
-      let format = path.extname(file).substr(1)
-      if (format === "mp4" || format === "mkv" || format === "avi") {
+      if (VIDEO_FORMATS.includes(path.extname(file))) {
         return true
       }
     })
@@ -155,30 +114,30 @@ module.exports = class {
     return false
   }
 
-  getYear(filename) {
+  static getYear(filename) {
     let rst = /(\d{4})/.exec(filename)
-    if (rst && rst[0] !== "1080") {
+    if (rst && rst[0] !== '1080') {
       return rst[0]
     }
     return null
   }
 
-  getShowName(filename) {
-    let rst = /([sS]\d{2}[eE]\d{2})/g.exec(filename)
-
-    if (rst) {
+  static getShowName(filename) {
+    if (Medoc.isEpisode(filename)) {
       let tmp = filename.substr(0, rst.index)
-      tmp = tmp.replace(/\./g, " ").trim()
+      tmp = tmp.replace(/\./g, ' ').trim()
 
       // Extract year from name
-      let year = this.getYear(filename)
+      let year = Medoc.getYear(filename)
+
       if (year) {
-        tmp = tmp.replace(year, "")
+        tmp = tmp.replace(year, '')
         tmp += `(${year})`
       }
 
       // Extract sub team from name
       let subname = /([[\s\S]*])[\s\S]*/g.exec(tmp)
+
       if (subname) {
         tmp = tmp.substr(subname[1].length, tmp.length)
       }
@@ -187,10 +146,11 @@ module.exports = class {
 
       return tmp
     }
+
     return null
   }
 
-  getEpisodeSeason(filename) {
+  static getEpisodeSeason(filename) {
     let rst = /[sS](\d{2})[eE]\d{2}/g.exec(filename)
 
     if (rst) {
@@ -198,7 +158,7 @@ module.exports = class {
     }
   }
 
-  getEpisodeNumber(filename) {
+  static getEpisodeNumber(filename) {
     let rst = /[sS]\d{2}[eE](\d{2})/g.exec(filename)
 
     if (rst) {
@@ -206,84 +166,82 @@ module.exports = class {
     }
   }
 
-  getFile(url) {
+  static getFile(url) {
     if (fs.lstatSync(url).isDirectory()) {
       let files = fs.readdirSync(url)
+
       let filteredFiles = files.filter(file => {
-        let format = path.extname(file).substr(1)
-        if (format === "mp4" || format === "mkv" || format === "avi") {
+        if (VIDEO_FORMATS.includes(path.extname(file))) {
           return true
         }
       })
+
       return filteredFiles[0]
     } else {
       return url
     }
   }
 
-  getOriginDirectory(episode) {
+  static getOriginDirectory(episode) {
     return `${episode.origin.root}\\${episode.origin.directory}`
   }
 
-  getOriginPath(episode) {
+  static getOriginPath(episode) {
     return `${episode.origin.root}\\${episode.origin.directory}\\${episode.origin.file}`
   }
 
-  getDestinationDirectory(episode) {
+  static getDestinationDirectory(episode) {
     return `${episode.destination.root}\\${episode.destination.directory}`
   }
 
-  search() {
-    return new Promise((resolve, reject) => {
-      var list = []
-      fs.readdir(this.from, (err, files) => {
-        if (err) {
-          reject(err)
-        }
-        if (files && files.length > 0) {
-          files.map(filename => {
-            if (this.isEpisode(filename)) {
-              let filePath = `${this.from}\\${filename}`
-              let isDirectory = fs.lstatSync(filePath).isDirectory()
-              let isFile = fs.lstatSync(filePath).isFile()
-              let showName = this.getShowName(filename)
-              let season = Number(this.getEpisodeSeason(filename))
-              let number = Number(this.getEpisodeNumber(filename))
-              let format = isDirectory ? path.extname(this.getFile(filePath)) : path.extname(filename)
+  static search(from, to) {
+    var list = []
 
-              list.push({
-                origin: {
-                  directory: fs.lstatSync(filePath).isDirectory() ? filename : null,
-                  file: this.getFile(filePath),
-                  format: format,
-                  isDirectory: isDirectory,
-                  isFile: isFile,
-                  path: fs.lstatSync(filePath).isDirectory()
-                    ? path.normalize(`${filePath}\\${this.getFile(filePath)}`)
-                    : filePath,
-                  root: this.from
-                },
-                episode: {
-                  show: showName,
-                  season: season,
-                  number: number
-                },
-                destination: {
-                  directory: path.normalize(`${showName}\\Season ${season}`),
-                  filename: `${showName} - ${season}x${number < 10 ? "0" + number : number}${format}`,
-                  path: path.normalize(
-                    `${this.to}\\${showName}\\Season ${season}\\${showName} - ${season}x${
-                      number < 10 ? "0" + number : number
-                    }${format}`
-                  ),
-                  root: this.to
-                }
-              })
+    const files = fs.readdirSync(from)
+
+    if (files && files.length > 0) {
+      files.map(filename => {
+        if (Medoc.isEpisode(filename)) {
+          let filePath = `${from}\\${filename}`
+          let isDirectory = fs.lstatSync(filePath).isDirectory()
+          let isFile = fs.lstatSync(filePath).isFile()
+          let showName = Medoc.getShowName(filename)
+          let season = Number(Medoc.getEpisodeSeason(filename))
+          let number = Number(Medoc.getEpisodeNumber(filename))
+          let format = isDirectory ? path.extname(Medoc.getFile(filePath)) : path.extname(filename)
+
+          list.push({
+            origin: {
+              directory: fs.lstatSync(filePath).isDirectory() ? filename : null,
+              file: Medoc.getFile(filePath),
+              format: format,
+              isDirectory: isDirectory,
+              isFile: isFile,
+              path: fs.lstatSync(filePath).isDirectory()
+                ? path.normalize(`${filePath}\\${Medoc.getFile(filePath)}`)
+                : filePath,
+              root: from
+            },
+            episode: {
+              show: showName,
+              season: season,
+              number: number
+            },
+            destination: {
+              directory: path.normalize(`${showName}\\Season ${season}`),
+              filename: `${showName} - ${season}x${number < 10 ? '0' + number : number}${format}`,
+              path: path.normalize(
+                `${to}\\${showName}\\Season ${season}\\${showName} - ${season}x${
+                  number < 10 ? '0' + number : number
+                }${format}`
+              ),
+              root: to
             }
           })
         }
-        resolve(list)
       })
-    })
+    }
+
+    return list
   }
 }
