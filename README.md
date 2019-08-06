@@ -2,7 +2,7 @@
 
 A JavaScript library that can simply detect, clean up and transfert tv show episodes from `a/` to `b/`.
 
-You can add subtitles download with [Yquem](https://github.com/Wifsimster/yquem).
+You can automatically download subtitles with [Yquem](https://github.com/Wifsimster/yquem).
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Wifsimster/medoc/blob/master/LICENSE)
 [![npm version](https://badge.fury.io/js/medoc.svg)](https://www.npmjs.com/package/medoc)
@@ -10,10 +10,8 @@ You can add subtitles download with [Yquem](https://github.com/Wifsimster/yquem)
 
 ## Features
 
-- Detect episodes from a source directory;
-- Episode file or directory must start with `{show}[ .?]S{season}E{episode}/`;
-- Clean up to : `{show}/Season {season}/{show} {season}x{episode}.{format}`;
-- Move clean up episode to a destination directory.
+- Detect tv show episodes from a source directory, ie: `Final.Space.(2019).S01E01.mkv`;
+- Move episodes to a destination directory with some changes, ie: `Final Space/Season 1/Final Space - 1x01.mkv`.
 
 ## Install
 
@@ -122,22 +120,22 @@ Return the path of a video file.
 
 Return the origin directory for an episode.
 
-- `episode` `<object>`.
+- `episode` `<object>` Object return by `search()`.
 
 #### getOriginPath([episode])
 
 Return the complete origin path for an episode.
 
-- `episode` `<object>`.
+- `episode` `<object>` Object return by `search()`.
 
-#### getODestinationDirectory([episode])
+#### getDestinationDirectory([episode])
 
 Return the destination directory for an episode.
 
-- `episode` `<object>`.
+- `episode` `<object>` Object return by `search()`.
 
 #### getDestinationPath([episode])
 
 Return the complete destination path for an episode.
 
-- `episode` `<object>`.
+- `episode` `<object>` Object return by `search()`.
