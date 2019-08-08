@@ -3,12 +3,12 @@
  * Licensed under MIT, https://opensource.org/licenses/MIT/
  */
 
-const fs = require('fs')
-const path = require('path')
-const mkdirp = require('mkdirp')
-const rimraf = require('rimraf')
+const fs = require("fs")
+const path = require("path")
+const mkdirp = require("mkdirp")
+const rimraf = require("rimraf")
 
-const VIDEO_FORMATS = ['.avi', '.mkv', '.mp4', '.webm', '.flv', '.vob', '.ogg', '.amv']
+const VIDEO_FORMATS = [".avi", ".mkv", ".mp4", ".webm", ".flv", ".vob", ".ogg", ".amv"]
 
 module.exports = class Medoc {
   constructor(from, to) {
@@ -41,13 +41,13 @@ module.exports = class Medoc {
 
         let reader = fs.createReadStream(sourcePath)
 
-        reader.on('open', () => {
+        reader.on("open", () => {
           console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
           let writer = fs.createWriteStream(destinationPath)
           reader.pipe(writer)
         })
 
-        reader.on('close', async () => {
+        reader.on("close", async () => {
           await Medoc.removePath(sourceDirectory)
           console.log(`${episode.origin.file} copied to ${destinationPath}`)
         })
@@ -64,13 +64,13 @@ module.exports = class Medoc {
 
       let reader = fs.createReadStream(sourcePath)
 
-      reader.on('open', () => {
+      reader.on("open", () => {
         // console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
         let writer = fs.createWriteStream(destinationPath)
         reader.pipe(writer)
       })
 
-      reader.on('close', async () => {
+      reader.on("close", async () => {
         await Medoc.removePath(episode.origin.file)
         console.log(`${episode.origin.file} copied to ${destinationPath}`)
       })
@@ -116,7 +116,7 @@ module.exports = class Medoc {
 
   static getYear(filename) {
     let rst = /(\d{4})/.exec(filename)
-    if (rst && rst[0] !== '1080') {
+    if (rst && rst[0] !== "1080") {
       return rst[0]
     }
     return null
@@ -124,14 +124,15 @@ module.exports = class Medoc {
 
   static getShowName(filename) {
     if (Medoc.isEpisode(filename)) {
+      let rst = /([sS]\d{2}[eE]\d{2})/g.exec(filename)
       let tmp = filename.substr(0, rst.index)
-      tmp = tmp.replace(/\./g, ' ').trim()
+      tmp = tmp.replace(/\./g, " ").trim()
 
       // Extract year from name
       let year = Medoc.getYear(filename)
 
       if (year) {
-        tmp = tmp.replace(year, '')
+        tmp = tmp.replace(year, "")
         tmp += `(${year})`
       }
 
@@ -229,10 +230,10 @@ module.exports = class Medoc {
             },
             destination: {
               directory: path.normalize(`${showName}\\Season ${season}`),
-              filename: `${showName} - ${season}x${number < 10 ? '0' + number : number}${format}`,
+              filename: `${showName} - ${season}x${number < 10 ? "0" + number : number}${format}`,
               path: path.normalize(
                 `${to}\\${showName}\\Season ${season}\\${showName} - ${season}x${
-                  number < 10 ? '0' + number : number
+                  number < 10 ? "0" + number : number
                 }${format}`
               ),
               root: to
