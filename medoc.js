@@ -21,7 +21,7 @@ module.exports = class Medoc {
 
     return await Promise.all(
       episodes.map(async episode => {
-        return await Yquem.move(episode)
+        return await Medoc.move(episode)
       })
     )
   }
