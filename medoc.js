@@ -39,21 +39,23 @@ module.exports = class Medoc {
           Medoc.createDirectory(destinationDirectory)
         }
 
-        let reader = fs.createReadStream(sourcePath)
+        return await new Promise((resolve, reject) => {
+          var reader = fs.createReadStream(sourcePath)
 
-        reader.on("open", () => {
-          console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
-          let writer = fs.createWriteStream(destinationPath)
-          reader.pipe(writer)
-        })
+          reader.on("open", () => {
+            let writer = fs.createWriteStream(destinationPath)
+            reader.pipe(writer)
+          })
 
-        reader.on("close", async () => {
-          await Medoc.removePath(sourceDirectory)
-          console.log(`${episode.origin.file} copied to ${destinationPath}`)
+          reader.on("close", async () => {
+            await Medoc.removePath(sourceDirectory)
+            resolve({ origin: sourcePath, destination: destinationPath })
+          })
         })
       } else {
         await Medoc.removePath(sourceDirectory)
         console.log(`${sourceDirectory} directory has no video file !`)
+        resolve({ message: `${sourceDirectory} directory has no video file !` })
       }
     }
 
@@ -62,17 +64,18 @@ module.exports = class Medoc {
         Medoc.createDirectory(destinationDirectory)
       }
 
-      let reader = fs.createReadStream(sourcePath)
+      return await new Promise((resolve, reject) => {
+        var reader = fs.createReadStream(sourcePath)
 
-      reader.on("open", () => {
-        // console.log(`Coping from '${episode.origin.path}' to '${destinationPath}'...`)
-        let writer = fs.createWriteStream(destinationPath)
-        reader.pipe(writer)
-      })
+        reader.on("open", () => {
+          let writer = fs.createWriteStream(destinationPath)
+          reader.pipe(writer)
+        })
 
-      reader.on("close", async () => {
-        await Medoc.removePath(episode.origin.file)
-        console.log(`${episode.origin.file} copied to ${destinationPath}`)
+        reader.on("close", async () => {
+          await Medoc.removePath(episode.origin.file)
+          resolve({ origin: sourcePath, destination: destinationPath })
+        })
       })
     }
   }
