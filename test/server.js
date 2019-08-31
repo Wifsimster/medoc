@@ -1,4 +1,4 @@
-const Medoc = require("./medoc")
+const Medoc = require("../medoc")
 
 const PATH_TO_SCAN = `w:`
 const PATH_TO_PUSH = `z:`
