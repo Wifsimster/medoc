@@ -146,6 +146,12 @@ module.exports = class Medoc {
         tmp = tmp.substr(subname[1].length, tmp.length)
       }
 
+      subname = /www\.[\w]+\.[org|com]+[\s-]*/g.exec(tmp)
+
+      if (subname) {
+        tmp = tmp.substr(subname[1].length, tmp.length)
+      }
+
       tmp = tmp.trim()
 
       return tmp
