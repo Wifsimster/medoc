@@ -17,13 +17,17 @@ module.exports = class Medoc {
   }
 
   async run() {
-    const episodes = await Medoc.search(this.from, this.to)
+    const episodes = Medoc.search(this.from, this.to)
 
-    return await Promise.all(
-      episodes.map(async episode => {
-        return await Medoc.move(episode)
-      })
-    )
+    if (Array.isArray(episodes)) {
+      return await Promise.all(
+        episodes.map(async episode => {
+          return await Medoc.move(episode)
+        })
+      )
+    } else {
+      return await Promise.reject(episodes)
+    }
   }
 
   static async move(episode) {
@@ -207,51 +211,55 @@ module.exports = class Medoc {
   static search(from, to) {
     var list = []
 
-    const files = fs.readdirSync(from)
+    try {
+      const files = fs.readdirSync(from)
 
-    if (files && files.length > 0) {
-      files.map(filename => {
-        if (Medoc.isEpisode(filename)) {
-          let filePath = `${from}\\${filename}`
-          let isDirectory = fs.lstatSync(filePath).isDirectory()
-          let isFile = fs.lstatSync(filePath).isFile()
-          let showName = Medoc.getShowName(filename)
-          let season = Number(Medoc.getEpisodeSeason(filename))
-          let number = Number(Medoc.getEpisodeNumber(filename))
-          let format = isDirectory ? path.extname(Medoc.getFile(filePath)) : path.extname(filename)
+      if (files && files.length > 0) {
+        files.map(filename => {
+          if (Medoc.isEpisode(filename)) {
+            let filePath = `${from}\\${filename}`
+            let isDirectory = fs.lstatSync(filePath).isDirectory()
+            let isFile = fs.lstatSync(filePath).isFile()
+            let showName = Medoc.getShowName(filename)
+            let season = Number(Medoc.getEpisodeSeason(filename))
+            let number = Number(Medoc.getEpisodeNumber(filename))
+            let format = isDirectory ? path.extname(Medoc.getFile(filePath)) : path.extname(filename)
 
-          list.push({
-            origin: {
-              directory: fs.lstatSync(filePath).isDirectory() ? filename : null,
-              file: Medoc.getFile(filePath),
-              format: format,
-              isDirectory: isDirectory,
-              isFile: isFile,
-              path: fs.lstatSync(filePath).isDirectory()
-                ? path.normalize(`${filePath}\\${Medoc.getFile(filePath)}`)
-                : filePath,
-              root: from
-            },
-            episode: {
-              show: showName,
-              season: season,
-              number: number
-            },
-            destination: {
-              directory: path.normalize(`${showName}\\Season ${season}`),
-              filename: `${showName} - ${season}x${number < 10 ? "0" + number : number}${format}`,
-              path: path.normalize(
-                `${to}\\${showName}\\Season ${season}\\${showName} - ${season}x${
-                  number < 10 ? "0" + number : number
-                }${format}`
-              ),
-              root: to
-            }
-          })
-        }
-      })
+            list.push({
+              origin: {
+                directory: fs.lstatSync(filePath).isDirectory() ? filename : null,
+                file: Medoc.getFile(filePath),
+                format: format,
+                isDirectory: isDirectory,
+                isFile: isFile,
+                path: fs.lstatSync(filePath).isDirectory()
+                  ? path.normalize(`${filePath}\\${Medoc.getFile(filePath)}`)
+                  : filePath,
+                root: from
+              },
+              episode: {
+                show: showName,
+                season: season,
+                number: number
+              },
+              destination: {
+                directory: path.normalize(`${showName}\\Season ${season}`),
+                filename: `${showName} - ${season}x${number < 10 ? "0" + number : number}${format}`,
+                path: path.normalize(
+                  `${to}\\${showName}\\Season ${season}\\${showName} - ${season}x${
+                    number < 10 ? "0" + number : number
+                  }${format}`
+                ),
+                root: to
+              }
+            })
+          }
+        })
+      }
+
+      return list
+    } catch (e) {
+      return new Error(`Directory ${from} is not accessible !`)
     }
-
-    return list
   }
 }

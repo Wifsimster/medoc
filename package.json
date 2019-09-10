@@ -8,7 +8,7 @@
   "git": "https://github.com/Wifsimster/medoc",
   "dependencies": {
     "mkdirp": "^0.5.1",
-    "rimraf": "^2.6.3"
+    "rimraf": "^2.7.1"
   },
   "scripts": {
     "start": "node server.js",
