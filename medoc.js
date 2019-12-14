@@ -146,14 +146,14 @@ module.exports = class Medoc {
       // Extract sub team from name
       let subname = /([[\s\S]*])[\s\S]*/g.exec(tmp)
 
-      if (subname) {
-        tmp = tmp.substr(subname[1].length, tmp.length)
+      if (subname && subname[0]) {
+        tmp = tmp.substr(subname[0].length, tmp.length)
       }
 
-      subname = /www\.[\w]+\.[org|com]+[\s-]*/g.exec(tmp)
+      subname = /www *[\w]+ *[org|com]+[\s-]*/g.exec(tmp)
 
-      if (subname) {
-        tmp = tmp.substr(subname[1].length, tmp.length)
+      if (subname && subname[0]) {
+        tmp = tmp.substr(subname[0].length, tmp.length)
       }
 
       tmp = tmp.trim()
@@ -259,6 +259,7 @@ module.exports = class Medoc {
 
       return list
     } catch (e) {
+      console.error(e)
       return new Error(`Directory ${from} is not accessible !`)
     }
   }
