@@ -8,7 +8,16 @@ const path = require("path")
 const mkdirp = require("mkdirp")
 const rimraf = require("rimraf")
 
-const VIDEO_FORMATS = [".avi", ".mkv", ".mp4", ".webm", ".flv", ".vob", ".ogg", ".amv"]
+const VIDEO_FORMATS = [
+  ".avi",
+  ".mkv",
+  ".mp4",
+  ".webm",
+  ".flv",
+  ".vob",
+  ".ogg",
+  ".amv"
+]
 
 module.exports = class Medoc {
   constructor(from, to) {
@@ -223,11 +232,15 @@ module.exports = class Medoc {
             let showName = Medoc.getShowName(filename)
             let season = Number(Medoc.getEpisodeSeason(filename))
             let number = Number(Medoc.getEpisodeNumber(filename))
-            let format = isDirectory ? path.extname(Medoc.getFile(filePath)) : path.extname(filename)
+            let format = isDirectory
+              ? path.extname(Medoc.getFile(filePath))
+              : path.extname(filename)
 
             list.push({
               origin: {
-                directory: fs.lstatSync(filePath).isDirectory() ? filename : null,
+                directory: fs.lstatSync(filePath).isDirectory()
+                  ? filename
+                  : null,
                 file: Medoc.getFile(filePath),
                 format: format,
                 isDirectory: isDirectory,
@@ -244,7 +257,9 @@ module.exports = class Medoc {
               },
               destination: {
                 directory: path.normalize(`${showName}\\Season ${season}`),
-                filename: `${showName} - ${season}x${number < 10 ? "0" + number : number}${format}`,
+                filename: `${showName} - ${season}x${
+                  number < 10 ? "0" + number : number
+                }${format}`,
                 path: path.normalize(
                   `${to}\\${showName}\\Season ${season}\\${showName} - ${season}x${
                     number < 10 ? "0" + number : number
@@ -260,7 +275,9 @@ module.exports = class Medoc {
       return list
     } catch (e) {
       console.error(e)
-      return new Error(`Directory ${from} is not accessible !`)
+      return new Error(
+        `{ "message": "Directory ${from} is not accessible !", "stack" : "${e}"`
+      )
     }
   }
 }
