@@ -1,6 +1,6 @@
 # medoc
 
-A JavaScript library that can simply detect, clean up and transfert tv show episodes from `a/` to `b/`.
+A JavaScript library that can simply detect, clean up and transfert tv show episodes from `a/` to `b/` without going online.
 
 You can automatically download subtitles with [Yquem](https://github.com/Wifsimster/yquem).
 
