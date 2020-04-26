@@ -7,14 +7,13 @@
   "license": "MIT",
   "git": "https://github.com/Wifsimster/medoc",
   "dependencies": {
-    "mkdirp": "^0.5.1",
-    "rimraf": "^3.0.0"
+    "mkdirp": "^1.0.4",
+    "rimraf": "^3.0.2"
   },
   "scripts": {
     "start": "node server.js",
     "patch": "npm version patch && npm publish"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Wifsimster/medoc.git"
